@@ -1,4 +1,4 @@
-# nl2mission · Agente de lenguaje natural → misión robótica (MVP)
+# nl2mission · Agente de lenguaje natural → misión robótica (MVP) EVENTO CLAUDE SDK AGENT BOGOTA
 
 Le hablas al robot como le hablarías a una persona y el agente lo convierte en una misión
 **estructurada, validada y ejecutable**:
