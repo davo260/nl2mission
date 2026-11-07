@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agente NL → Misión · visor 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#1d2433;--muted:#6b7280;--line:#e5e7eb;--bg:#f7f8fa;--accent:#0f766e;--accent-soft:#e6f4f2;--alert:#b91c1c;--warn:#b45309}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+  .app{display:grid;grid-template-columns:240px 1fr 360px;height:100vh}
+  aside,.panel{background:#fff;overflow:auto}
+  aside{border-right:1px solid var(--line);padding:18px 14px}
+  .panel{border-left:1px solid var(--line);padding:18px}
+  h1{font-size:15px;margin:0 0 4px;font-weight:700}
+  .sub{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.4}
+  .scene{display:block;width:100%;text-align:left;border:1px solid transparent;background:none;padding:9px 10px;border-radius:8px;cursor:pointer;font:inherit;font-size:13px;color:var(--ink);margin-bottom:2px}
+  .scene:hover{background:var(--bg)}
+  .scene.on{background:var(--accent-soft);border-color:#b7dfd9}
+  .scene .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-right:6px}
+  .scene .tag{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:99px;margin-top:4px;background:#f1f5f9;color:var(--muted)}
+  .scene .tag.exec{background:#dcfce7;color:#166534}
+  .scene .tag.rej{background:#fee2e2;color:#991b1b}
+  main{position:relative;overflow:hidden}
+  #view{position:absolute;inset:0}
+  .labels{position:absolute;inset:0;pointer-events:none}
+  .lbl{position:absolute;transform:translate(-50%,-50%);font-size:12px;font-weight:600;color:#374151;background:rgba(255,255,255,.82);padding:2px 7px;border-radius:6px;white-space:nowrap}
+  .lbl.restr{color:var(--alert)}
+  .bubble{position:absolute;transform:translate(-50%,-100%);max-width:260px;background:#fff7d6;border:1.5px solid #f59e0b;border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.12);pointer-events:none}
+  .hud{position:absolute;left:16px;right:16px;bottom:14px;display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.06)}
+  .hud button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+  .hud button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .hud input[type=range]{flex:1}
+  .hud .t{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);min-width:70px;text-align:right}
+  .topbar{position:absolute;left:16px;top:14px;display:flex;gap:8px}
+  .chip{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:12px;cursor:pointer}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 8px;font-weight:600}
+  h2:first-child{margin-top:0}
+  .msg{font-size:13px;line-height:1.45;margin-bottom:8px;padding:8px 10px;border-radius:10px}
+  .msg.u{background:#f1f5f9}
+  .msg.a{background:var(--accent-soft);color:#134e4a}
+  .msg.a.rej{background:#fef2f2;color:#7f1d1d}
+  .msg.a.q{background:#fffbeb;color:#78350f}
+  .msg b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.7;margin-bottom:2px}
+  .plan div{font-size:13px;padding:3px 6px;border-radius:6px;color:var(--muted)}
+  .plan div.on{background:var(--accent);color:#fff;font-weight:600}
+  .plan .l1{padding-left:18px;font-style:italic}.plan .l2{padding-left:30px}
+  .ev{font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.55;color:#374151}
+  .ev .x{color:var(--alert)}
+  .bat{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
+  .bat i{display:block;height:100%;background:#16a34a;transition:width .2s}
+  .muted{color:var(--muted);font-size:12.5px}
+  pre{font-family:'JetBrains Mono',monospace;font-size:11px;background:#0f172a;color:#e2e8f0;padding:10px;border-radius:8px;overflow:auto;max-height:220px}
+  details summary{cursor:pointer;font-size:12.5px;color:var(--muted);margin-top:10px}
+  @media (max-width:1000px){.app{grid-template-columns:1fr;grid-template-rows:auto 55vh auto;height:auto}aside{border-right:none;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Agente NL → Misión</h1>
+    <div class="sub">MVP · el LLM propone, el validador decide. Elige una escena para reproducirla en 3D.</div>
+    <div id="scenes"></div>
+  </aside>
+  <main>
+    <div id="view"></div>
+    <div class="labels" id="labels"></div>
+    <div class="topbar">
+      <span class="chip on" data-cam="orbit">Órbita libre</span>
+      <span class="chip" data-cam="follow">Seguir robot</span>
+      <span class="chip" data-cam="top">Vista superior</span>
+    </div>
+    <div class="hud">
+      <button class="primary" id="play">▶ Reproducir</button>
+      <button id="restart">⟲</button>
+      <input type="range" id="scrub" min="0" max="1" step="0.001" value="0">
+      <select id="speed" class="hud-sel" style="border:1px solid var(--line);border-radius:8px;padding:5px;font:inherit;font-size:13px">
+        <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+      </select>
+      <span class="t" id="clock">t = 0 s</span>
+    </div>
+  </main>
+  <section class="panel">
+    <h2>Conversación</h2><div id="dialog"></div>
+    <h2>Plan validado</h2><div class="plan" id="plan"></div>
+    <h2>Eventos</h2><div class="ev" id="events"></div>
+    <h2>Batería</h2><div class="muted" id="battxt">—</div><div class="bat"><i id="bat"></i></div>
+    <details><summary>Ver JSON de la misión</summary><pre id="json"></pre></details>
+  </section>
+</div>
+
+<script>__THREE__</script>
+<script>__ORBIT__</script>
+<script>
+const DATA = __DATA__;
+const W = DATA.world, SC = DATA.scenes;
+const COLORS = {rojo:0xd62728, azul:0x1f77b4, verde:0x2ca02c, amarillo:0xe3b505, negro:0x2b2b2b, blanco:0xf2f2f2, naranja:0xff7f0e};
+const toV = (x, y, h = 0) => new THREE.Vector3(x - W.width / 2, h, -(y - W.height / 2));
+
+// ---------------------------------------------------------------- escena 3D
+const host = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+host.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xeef1f5);
+scene.fog = new THREE.Fog(0xeef1f5, 45, 90);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+camera.position.set(0, 27, 24);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.48; controls.target.set(0, 0, 0);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb8c2cc, 0.6));
+const sun = new THREE.DirectionalLight(0xffffff, 0.6);
+sun.position.set(-10, 22, 12); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, {left: -16, right: 16, top: 12, bottom: -12, near: 1, far: 60});
+scene.add(sun);
+
+// suelo y habitaciones
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(W.width + 6, W.height + 6), new THREE.MeshStandardMaterial({color: 0xdfe4ea}));
+ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; ground.receiveShadow = true; scene.add(ground);
+const labelsEl = document.getElementById('labels');
+const labels = [];
+function addLabel(text, pos, cls = '') {
+  const el = document.createElement('div'); el.className = 'lbl ' + cls; el.textContent = text;
+  labelsEl.appendChild(el); labels.push({el, pos});
+}
+W.places.forEach(p => {
+  if (!p.rect) return;
+  const [x0, y0, x1, y1] = p.rect;
+  const col = p.id === W.home ? 0xcfe0fb : p.restricted ? 0xf6d4d4 : p.id === 'pasillo' ? 0xf1f3f5 : 0xe3f1ee;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, y1 - y0), new THREE.MeshStandardMaterial({color: col}));
+  m.rotation.x = -Math.PI / 2; m.receiveShadow = true;
+  m.position.copy(toV((x0 + x1) / 2, (y0 + y1) / 2, p.id === W.home ? 0.012 : 0.005));
+  scene.add(m);
+  const ly = p.id === W.home ? y0 - 0.4 : y1 - 1.0;
+  addLabel(p.name + (p.restricted ? ' · restringida' : ''), toV(p.id === W.home ? (x0 + x1) / 2 : x0 + 1.6, ly, 1.1), p.restricted ? 'restr' : '');
+});
+// paredes (grilla de ocupación → cajas instanciadas)
+const cells = [];
+W.occ.forEach((row, r) => row.forEach((v, c) => v && cells.push([r, c])));
+const wallGeo = new THREE.BoxGeometry(W.res, 1.0, W.res);
+const walls = new THREE.InstancedMesh(wallGeo, new THREE.MeshStandardMaterial({color: 0x2f3a4c}), cells.length);
+const tmp = new THREE.Object3D();
+cells.forEach(([r, c], i) => { tmp.position.copy(toV((c + .5) * W.res, (r + .5) * W.res, 0.5)); tmp.updateMatrix(); walls.setMatrixAt(i, tmp.matrix); });
+walls.castShadow = true; walls.receiveShadow = true; scene.add(walls);
+
+// objetos
+const objMeshes = {};
+function makeObject(o) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color: COLORS[o.color] ?? 0x8e44ad, roughness: .55});
+  if (o.type === 'caja') { const m = new THREE.Mesh(new THREE.BoxGeometry(.55, .55, .55), mat); m.position.y = .275; g.add(m); }
+  else if (o.type === 'extintor') { const m = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .6, 20), mat); m.position.y = .3; g.add(m);
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .12, 12), new THREE.MeshStandardMaterial({color: 0x222222})); t.position.y = .66; g.add(t); }
+  else if (o.type === 'persona') { const sk = new THREE.MeshStandardMaterial({color: 0x7c5cbf});
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(.22, .26, 1.1, 20), sk); b.position.y = .55; g.add(b);
+    const h = new THREE.Mesh(new THREE.SphereGeometry(.2, 20, 16), new THREE.MeshStandardMaterial({color: 0xe0b48a})); h.position.y = 1.32; g.add(h); }
+  else if (o.type === 'mochila') { const m = new THREE.Mesh(new THREE.BoxGeometry(.4, .5, .25), mat); m.position.y = .25; g.add(m); }
+  else if (o.type === 'taza') { const m = new THREE.Mesh(new THREE.CylinderGeometry(.12, .1, .2, 20), mat); m.position.y = .1; g.add(m); }
+  else { const m = new THREE.Mesh(new THREE.SphereGeometry(.25, 16, 12), mat); m.position.y = .25; g.add(m); }
+  g.traverse(m => { if (m.isMesh) { m.castShadow = true; } });
+  g.position.copy(toV(o.pos[0], o.pos[1]));
+  const ring = new THREE.Mesh(new THREE.RingGeometry(.48, .6, 40), new THREE.MeshBasicMaterial({color: 0xf59e0b, transparent: true, opacity: .95, side: THREE.DoubleSide}));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = .03; ring.visible = false; g.add(ring);
+  scene.add(g); objMeshes[o.id] = {g, ring};
+}
+W.objects.forEach(makeObject);
+
+// robot tipo TurtleBot
+const robot = new THREE.Group();
+const rmat = new THREE.MeshStandardMaterial({color: 0x0f766e, roughness: .4, metalness: .1});
+const base = new THREE.Mesh(new THREE.CylinderGeometry(.36, .38, .16, 32), rmat); base.position.y = .12; robot.add(base);
+const deck = new THREE.Mesh(new THREE.CylinderGeometry(.33, .33, .03, 32), new THREE.MeshStandardMaterial({color: 0x1f2937})); deck.position.y = .33; robot.add(deck);
+[.24].forEach(y => { const p = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, .14, 8), new THREE.MeshStandardMaterial({color: 0x9ca3af}));
+  [[.2, .2], [-.2, .2], [.2, -.2], [-.2, -.2]].forEach(([a, b]) => { const q = p.clone(); q.position.set(a, y, b); robot.add(q); }); });
+const lidar = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .1, 24), new THREE.MeshStandardMaterial({color: 0x111827})); lidar.position.set(-.05, .4, 0); robot.add(lidar);
+const nose = new THREE.Mesh(new THREE.ConeGeometry(.08, .2, 16), new THREE.MeshStandardMaterial({color: 0xffffff}));
+nose.rotation.z = -Math.PI / 2; nose.position.set(.36, .22, 0); robot.add(nose);
+robot.traverse(m => { if (m.isMesh) m.castShadow = true; });
+scene.add(robot);
+const sense = new THREE.Mesh(new THREE.CircleGeometry(W.range, 64), new THREE.MeshBasicMaterial({color: 0x0f766e, transparent: true, opacity: .08}));
+sense.rotation.x = -Math.PI / 2; sense.position.y = .02; scene.add(sense);
+const senseEdge = new THREE.Mesh(new THREE.RingGeometry(W.range - .04, W.range, 80), new THREE.MeshBasicMaterial({color: 0x0f766e, transparent: true, opacity: .35, side: THREE.DoubleSide}));
+senseEdge.rotation.x = -Math.PI / 2; senseEdge.position.y = .021; scene.add(senseEdge);
+let trail = null;
+const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.style.display = 'none'; labelsEl.appendChild(bubble);
+
+// ---------------------------------------------------------------- UI
+const $ = id => document.getElementById(id);
+let cur = null, prog = 0, playing = false, speed = 1, camMode = 'orbit';
+const FPS = 6;   // cuadros de simulación por segundo de reproducción
+
+function tagFor(s) {
+  if (s.mission != null) return ['exec', 'ejecuta'];
+  const last = s.dialog[s.dialog.length - 1][1];
+  return [/no puedo|bater/i.test(last) ? 'rej' : '', /no puedo|bater/i.test(last) ? 'rechaza' : 'pregunta'];
+}
+SC.forEach((s, i) => {
+  const b = document.createElement('button'); b.className = 'scene';
+  const [cls, txt] = tagFor(s);
+  b.innerHTML = `<span class="n">${String(s.n).padStart(2, '0')}</span>${s.title}<br><span class="tag ${cls}">${txt}</span>`;
+  b.onclick = () => load(i); $('scenes').appendChild(b);
+});
+
+function esc(t) { return t.replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c])); }
+function load(i) {
+  cur = SC[i]; prog = 0; playing = cur.frames && cur.frames.length > 0;
+  document.querySelectorAll('.scene').forEach((b, k) => b.classList.toggle('on', k === i));
+  $('dialog').innerHTML = cur.dialog.map(([who, t], k) => {
+    const isA = who === 'Agente', last = k === cur.dialog.length - 1;
+    let cls = isA ? 'a' : 'u';
+    if (isA && !t.startsWith('Entendido')) cls += /no puedo|bater/i.test(t) ? ' rej' : ' q';
+    return `<div class="msg ${cls}"><b>${who}</b>${esc(t)}</div>`;
+  }).join('');
+  $('plan').innerHTML = cur.plan ? cur.plan.map(([lvl, t, p]) => `<div class="l${lvl}" data-p="${p.join('/')}">${esc(t)}</div>`).join('')
+    : '<span class="muted">Sin misión: el agente preguntó o rechazó antes de mover el robot.</span>';
+  $('json').textContent = cur.steps ? JSON.stringify(cur.steps, null, 2) : '—';
+  if (trail) { scene.remove(trail); trail = null; }
+  if (cur.frames && cur.frames.length) {
+    const pts = cur.frames.map(f => toV(f.x, f.y, .04));
+    const geo = new THREE.BufferGeometry().setFromPoints(pts); geo.setDrawRange(0, 1);
+    trail = new THREE.Line(geo, new THREE.LineBasicMaterial({color: 0x0f766e, transparent: true, opacity: .7}));
+    scene.add(trail);
+  }
+  $('scrub').value = 0; updatePlayBtn(); apply();
+}
+function frameAt(p) {
+  const F = cur.frames; p = Math.max(0, Math.min(1, p || 0)); const fi = p * (F.length - 1); const i = Math.floor(fi); const k = fi - i;
+  return {a: F[i], b: F[Math.min(i + 1, F.length - 1)], k, i};
+}
+function lerpAngle(a, b, k) { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return a + d * k; }
+function apply() {
+  if (!cur || !cur.frames || !cur.frames.length) {
+    $('events').innerHTML = '<span class="muted">—</span>'; bubble.style.display = 'none';
+    Object.values(objMeshes).forEach(o => o.ring.visible = false); return;
+  }
+  const {a, b, k, i} = frameAt(prog);
+  const x = a.x + (b.x - a.x) * k, y = a.y + (b.y - a.y) * k;
+  robot.position.copy(toV(x, y)); robot.rotation.y = lerpAngle(a.h, b.h, k);
+  lidar.rotation.y += .25;
+  sense.position.x = senseEdge.position.x = robot.position.x;
+  sense.position.z = senseEdge.position.z = robot.position.z;
+  if (trail) trail.geometry.setDrawRange(0, i + 2);
+  Object.entries(objMeshes).forEach(([id, o]) => o.ring.visible = a.seen.includes(id));
+  const act = a.a ? a.a.join('/') : null;
+  document.querySelectorAll('#plan div').forEach(d => d.classList.toggle('on', d.dataset.p === act));
+  $('events').innerHTML = a.e.slice(-7).map(e => `<div class="${/Alerta|No encontré|abortada/.test(e) ? 'x' : ''}">${esc(e)}</div>`).join('');
+  $('bat').style.width = a.b + '%'; $('bat').style.background = a.b > 40 ? '#16a34a' : a.b > 20 ? '#f59e0b' : '#b91c1c';
+  $('battxt').textContent = `${a.b.toFixed(0)} %`;
+  $('clock').textContent = `t = ${a.t.toFixed(0)} s`;
+  bubble.dataset.on = a.s ? '1' : ''; bubble.textContent = a.s || '';
+}
+function updatePlayBtn() { $('play').textContent = playing ? '❚❚ Pausa' : '▶ Reproducir'; }
+$('play').onclick = () => { if (!cur) return; if (prog >= 1) prog = 0; playing = !playing; updatePlayBtn(); };
+$('restart').onclick = () => { prog = 0; playing = true; updatePlayBtn(); apply(); };
+$('scrub').oninput = e => { prog = +e.target.value; playing = false; updatePlayBtn(); apply(); };
+$('speed').onchange = e => speed = +e.target.value;
+document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+  camMode = c.dataset.cam; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c));
+  if (camMode === 'top') { camera.position.set(0, 30, 0.01); controls.target.set(0, 0, 0); }
+  if (camMode === 'orbit') { camera.position.set(0, 27, 24); controls.target.set(0, 0, 0); }
+});
+
+// ---------------------------------------------------------------- bucle
+function resize() { const r = host.getBoundingClientRect(); renderer.setSize(r.width, r.height); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+const v = new THREE.Vector3();
+function project(p, el) {
+  v.copy(p).project(camera); const r = host.getBoundingClientRect();
+  const vis = v.z < 1; el.style.display = vis ? '' : 'none';
+  el.style.left = ((v.x + 1) / 2 * r.width) + 'px'; el.style.top = ((1 - v.y) / 2 * r.height) + 'px';
+}
+let last = performance.now();
+function tick(now) {
+  const dt = Math.max(0, Math.min(.1, (now - last) / 1000)); last = now;
+  if (playing && cur && cur.frames && cur.frames.length > 1) {
+    prog = Math.min(1, prog + dt * FPS * speed / (cur.frames.length - 1));
+    $('scrub').value = prog; apply();
+    if (prog >= 1) { playing = false; updatePlayBtn(); }
+  }
+  if (camMode === 'follow' && cur && cur.frames) {
+    const t = robot.position; controls.target.lerp(t, .08);
+    camera.position.lerp(new THREE.Vector3(t.x - 4 * Math.cos(robot.rotation.y), 5.5, t.z + 4 * Math.sin(robot.rotation.y)), .05);
+  }
+  controls.update();
+  labels.forEach(l => project(l.pos, l.el));
+  if (bubble.dataset.on) { project(robot.position.clone().add(new THREE.Vector3(0, 1.0, 0)), bubble); } else bubble.style.display = 'none';
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+load(1);
+</script>
+</body>
+</html>

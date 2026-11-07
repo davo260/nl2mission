@@ -1,0 +1,75 @@
+{
+  "name": "Laboratorio simulado (24 x 15 m)",
+  "frame": "map",
+  "home": "base",
+  "robot": {
+    "start": [1.5, 7.5],
+    "battery": 100.0,
+    "consumption_per_m": 0.25,
+    "reserve": 15.0,
+    "sensor_range": 3.5,
+    "speed": 0.5
+  },
+  "places": [
+    {"id": "base", "name": "Base de carga", "aliases": ["base", "base de carga", "estacion de carga", "cargador", "casa", "dock", "home"],
+     "center": [1.5, 7.5], "rect": [0.5, 6.5, 2.5, 8.5], "restricted": false, "sensors": {"temperatura": 22.0, "humedad": 50}},
+    {"id": "pasillo", "name": "Pasillo", "aliases": ["pasillo", "corredor", "hall", "hallway", "corridor"],
+     "center": [12.0, 7.5], "rect": [0, 5.5, 24, 9.5], "restricted": false, "sensors": {"temperatura": 22.5, "humedad": 50}},
+    {"id": "laboratorio", "name": "Laboratorio", "aliases": ["laboratorio", "lab", "laboratorio de electronica", "laboratory"],
+     "center": [12.0, 12.25], "rect": [8, 9.5, 16, 15], "restricted": false, "sensors": {"temperatura": 26.5, "humedad": 45}},
+    {"id": "bodega", "name": "Bodega", "aliases": ["bodega", "almacen", "deposito", "warehouse", "storage"],
+     "center": [20.0, 12.25], "rect": [16, 9.5, 24, 15], "restricted": false, "sensors": {"temperatura": 21.0, "humedad": 62}},
+    {"id": "oficina_norte", "name": "Oficina norte", "aliases": ["oficina norte", "oficina del norte", "oficina de arriba", "oficina 1", "oficina", "office"],
+     "center": [4.0, 12.25], "rect": [0, 9.5, 8, 15], "restricted": false, "sensors": {"temperatura": 23.0, "humedad": 48}},
+    {"id": "oficina_sur", "name": "Oficina sur", "aliases": ["oficina sur", "oficina del sur", "oficina de abajo", "oficina 2", "oficina", "office"],
+     "center": [4.0, 2.75], "rect": [0, 0, 8, 5.5], "restricted": false, "sensors": {"temperatura": 23.5, "humedad": 47}},
+    {"id": "cocina", "name": "Cocina", "aliases": ["cocina", "cafeteria", "comedor", "kitchen"],
+     "center": [12.0, 2.75], "rect": [8, 0, 16, 5.5], "restricted": false, "sensors": {"temperatura": 24.0, "humedad": 55}},
+    {"id": "servidores", "name": "Sala de servidores", "aliases": ["sala de servidores", "cuarto de servidores", "servidores", "data center", "server room", "rack"],
+     "center": [20.0, 2.75], "rect": [16, 0, 24, 5.5], "restricted": true, "sensors": {"temperatura": 34.2, "humedad": 30}}
+  ],
+  "object_types": {
+    "caja": ["caja", "cajas", "paquete", "box"],
+    "extintor": ["extintor", "extintores", "extinguidor", "fire extinguisher", "extinguisher"],
+    "persona": ["persona", "personas", "alguien", "gente", "person", "someone"],
+    "mochila": ["mochila", "maleta", "morral", "backpack", "bag"],
+    "taza": ["taza", "pocillo", "mug", "cup"],
+    "botiquin": ["botiquin", "kit de primeros auxilios", "first aid kit"]
+  },
+  "colors": {
+    "rojo": ["rojo", "roja", "rojos", "rojas", "red"],
+    "azul": ["azul", "azules", "blue"],
+    "verde": ["verde", "verdes", "green"],
+    "amarillo": ["amarillo", "amarilla", "yellow"],
+    "negro": ["negro", "negra", "black"],
+    "blanco": ["blanco", "blanca", "white"],
+    "naranja": ["naranja", "orange"]
+  },
+  "objects": [
+    {"id": "caja_roja", "type": "caja", "color": "rojo", "pos": [22.0, 13.2]},
+    {"id": "caja_verde", "type": "caja", "color": "verde", "pos": [17.5, 10.8]},
+    {"id": "caja_azul", "type": "caja", "color": "azul", "pos": [14.6, 13.6]},
+    {"id": "persona_1", "type": "persona", "color": null, "pos": [13.5, 11.5]},
+    {"id": "extintor_cocina", "type": "extintor", "color": "rojo", "pos": [15.2, 1.0]},
+    {"id": "extintor_pasillo", "type": "extintor", "color": "rojo", "pos": [6.5, 8.9]},
+    {"id": "mochila_negra", "type": "mochila", "color": "negro", "pos": [2.0, 1.5]},
+    {"id": "taza_blanca", "type": "taza", "color": "blanco", "pos": [13.6, 4.2]}
+  ],
+  "sim": {
+    "width": 24.0,
+    "height": 15.0,
+    "resolution": 0.5,
+    "walls": [
+      [0, 9.5, 24, 9.5],
+      [0, 5.5, 24, 5.5],
+      [8, 9.5, 8, 15],
+      [16, 9.5, 16, 15],
+      [8, 0, 8, 5.5],
+      [16, 0, 16, 5.5]
+    ],
+    "doors": [
+      [4, 9.5, 2.0], [12, 9.5, 2.0], [20, 9.5, 2.0],
+      [4, 5.5, 2.0], [12, 5.5, 2.0], [20, 5.5, 2.0]
+    ]
+  }
+}

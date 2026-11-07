@@ -1,0 +1,6 @@
+demo_out/
+__pycache__/
+*.pyc
+.pytest_cache/
+demo_out/*.mp4
+demo_out/traza.json

@@ -1,0 +1,7 @@
+numpy
+matplotlib
+pillow
+# opcional: parser con Claude
+anthropic
+# opcional: tests
+pytest
